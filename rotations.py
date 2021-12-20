@@ -1,6 +1,7 @@
 import csv
 import logging
 import os
+import platform
 
 import requests
 import wx
@@ -29,15 +30,31 @@ class RotationManagerDialog(wx.Dialog):
         # ---------------------------------------------------------------------
         # ---------------------------- Hotkeys --------------------------------
         # ---------------------------------------------------------------------
-        quitid = wx.NewId()
+        if platform.system() == "Darwin":
+            # This panel is unused, but without it the acceleraors don't work (on MacOS at least)
+            self.panel = wx.Panel(parent=self, id=wx.ID_ANY)
+            self.panel.Fit()
+            quitid = wx.NewIdRef()
+            accel = wx.AcceleratorTable(
+                [
+                    (wx.ACCEL_CTRL, ord("W"), quitid),
+                    (wx.ACCEL_CTRL, ord("Q"), quitid),
+                    (wx.ACCEL_NORMAL, wx.WXK_ESCAPE, quitid),
+                ]
+            )
+        else:
+            quitid = wx.NewId()
+            accel = wx.AcceleratorTable(
+                [
+                    wx.AcceleratorEntry(wx.ACCEL_CTRL, ord("W"), quitid),
+                    wx.AcceleratorEntry(wx.ACCEL_CTRL, ord("Q"), quitid),
+                    wx.AcceleratorEntry(wx.ACCEL_SHIFT, wx.WXK_ESCAPE, quitid),
+                ]
+            )
+
+        self.SetAcceleratorTable(accel)
         self.Bind(wx.EVT_MENU, self.quit_dialog, id=quitid)
 
-        entries = [wx.AcceleratorEntry(), wx.AcceleratorEntry(), wx.AcceleratorEntry()]
-        entries[0].Set(wx.ACCEL_CTRL, ord("W"), quitid)
-        entries[1].Set(wx.ACCEL_CTRL, ord("Q"), quitid)
-        entries[2].Set(wx.ACCEL_SHIFT, wx.WXK_ESCAPE, quitid)
-        accel = wx.AcceleratorTable(entries)
-        self.SetAcceleratorTable(accel)
         # ---------------------------------------------------------------------
         # ------------------------- Add/Edit inputs ---------------------------
         # ---------------------------------------------------------------------
